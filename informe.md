@@ -1,157 +1,139 @@
-# Tema: Detección de similitudes entre códigos a partir de sus grafos de dependencia
+# Detección de Similitudes entre Códigos a partir de sus Grafos de Dependencia
 
-## Integrantes
+**Autores:**  
+Daniel Toledo Martínez, Osvaldo Roberto Moreno Prieto
 
-- Daniel Toledo Martínez
-- Osvaldo Roberto Moreno Prieto
+**Fecha:**  
+\(\today\)
 
-## Definiciones
+---
 
-Grafo de dependencias (PDG):
-Tipo de un vértice: El tipo asignado por el PDG
+## Introducción
 
-## Antecedentes e ideas generales
+La detección de plagio en código fuente es un área relevante en el análisis de software. Tradicionalmente existen tres enfoques principales: detección basada en texto, análisis sintáctico y análisis semántico. En este trabajo se aborda el análisis semántico, considerado más robusto frente a técnicas de ofuscación como cambios en el formato, reordenamiento de bloques de código o modificaciones en las estructuras de control y de datos.
 
-En la detección de plagio de código fuente de manera general aparecen 3 enfoques principales en la literatura: detección basada en texto, análisis sintáctico y análisis semántico, donde cada una maneja un nivel de abstracción del código distinta. En este proyecto nos estaremos enfocando en el análisis semántico del código por su capacidad de ser resistente contra algunas de las estrategias de ofuscación más comunes como son:
+El modelado de la estructura (PDG) se toma como dado; el foco está en los algoritmos que operan sobre esta estructura.
 
-- Copias exactas
-- Adición y eliminación de comentarios, modificaciones de formato
-- Reordenamiento de bloques de código, cambio en las estructuras de control, modificación en estructuras de datos (ej. cambiar un array por una lista)
+---
 
-El problema de modelación de la estructura sobre la cual estaremos trabajando (PDG) queda fuera del ámbito de este trabajo, por lo que nos estaremos concentrando en los algoritmos sobre esta estructura que puedan ser de interés para nuestro problema.
+## Propuestas de Solución
 
-## Propuesta 1
+A continuación se presentan distintos enfoques para determinar similitudes entre códigos utilizando sus PDG.
 
-Para determinar si dos códigos son copias exactas, sujetos a una serie de modificaciones de las antes mencionadas, y dado que conocemos las potencialidades de los PDG, podríamos como primer enfoque determinar si un par de grafos son isomorfos, de esta manera estaríamos encontrando similitudes estructurales.
+---
 
-### Problema de isomorfismo de grafos (GI)
+### Propuesta 1: Isomorfismo de Grafos
 
-Como enfoque para esta propuesta proponemos determinar si los grafos G y H son isomorfos
+#### Definición del Algoritmo
 
-#### Definición del algoritmo
+Se propone utilizar técnicas de refinamiento de clases de equivalencia (o etiquetado) para determinar si dos grafos \( G \) y \( H \) (correspondientes a los PDG) son isomorfos. El algoritmo sigue estos pasos:
 
-Para resolver el problema de isomorfismo de grafos vamos a estar utilizando un algoritmo basado en técnicas de refinamiento de clases de equivalencia (también conocido como coloración o etiquetado). Para ello vamos a establecer un grupo de invariantes sobre los vértices (clase, grado de entrada, grado de salida, conexiones con otras clases) y realizar un proceso de refinamiento hasta que los vértices estén correctamente distribuidos en sus respectivas clases. Dos vértices pertenecen a la misma clase siempre que sus invariantes sean iguales.
+1. **Inicialización:**  
+   Para cada vértice de \( G \), determinar sus invariantes (clase, grado de entrada, grado de salida, conexiones con otras clases) y agruparlos.
 
-#### Pasos del algoritmo
+2. **Refinamiento:**  
+   Refinar las clases existentes utilizando la información de los vecinos.
 
-- Paso 1 (Inicialización): Para cada vértice de G determinar sus invariantes y agrupar los vértices en clases iniciales según sus invariantes
-- Paso 2 (Refinamiento): En cada iteración, refinar las clases existentes usando la información de los vecinos
-- Paso 3 (Refinamiento): Agrupar vértices con la misma etiqueta en nuevas clases
-- Paso 4 (Refinamiento): Repetir a partir del paso 2 hasta que las clases ya no puedan ser refinadas (estabilización)
-- Paso 5: Aplicar el mismo proceso para H
-- Paso 6: Verificar coincidencia de las clases, en caso positivo, generar posibles biyecciones entre las clases
+3. **Iteración:**  
+   Repetir el refinamiento hasta alcanzar la estabilización (no se pueden refinar más las clases).
 
-#### Complejidad temporal
+4. **Aplicación en \( H \):**  
+   Realizar el mismo proceso de clasificación en el grafo \( H \).
 
-Sean n el número de vértices y m el número de aristas
+5. **Comparación:**  
+   Verificar la coincidencia de clases y determinar posibles biyecciones entre ellas.
 
-- (Inicialización) Calcular invariantes: O(n+m)
-- (Refinamiento) Generar etiqueta para todos los vértices: O(n+m)
-- (Refinamiento) Número de iteraciones: O(n) en el peor caso (las clases se dividen hasta que cada vértice esté en su propia clase)
-- Total: O(n) X O(n+m) = O(2n + nm) = O(nm)
-  - Para grafos densos: O($n^3$)
-  - Para grafos dispersos: O($n^2$)
+#### Complejidad Temporal
 
-#### Limitaciones
+Sean \( n \) el número de vértices y \( m \) el número de aristas:
 
-- Esta solución encuentra grafos isomorfos, por tanto es débil en los casos en que ocurre cualquier adición a la lógica
-- Grafos regulares: Si todos los vértices tienen el mismo grado, el refinamiento no progresa
-- Grafos fuertemente simétricos: Puede que no se distingan clases, requiriendo backtracking adicional
-- No es concluyente para todos los grafos: Algunos grafos no isomorfos pasan la prueba (falsos positivos), como los grafos de Cayley
-
-El problema en cuestión es suficientemente complejo en su evaluación temporal como para dar a luz a una nueva categoría de complejidad **GI** y aunque su complejidad es polinomial, no resuelve el problema de isomorfismo para todos los casos, por lo que se combina con otras técnicas.
-
-## Propuesta 2
-
-Para determinar similitudes entre los códigos tenemos como propuesta determinar si un código A implementa la misma lógica que un código B. Para ello llamaremos G al PDG de A y H al PDG de B
-
-### Problema de isomorfismo de subgrafos (SIP)
-
-Como enfoque para esta propuesta planteamos determinar si existe algún subgrafo en A isomorfo con B, esto implicaría que se implementa la misma lógica de B en un subconjuto de A, es decir, que B es parte de la solución de A.
-
-#### Definición formal del problema:
-
-Dado un par de grafos G=($V_g$, $E_g$) y H=($V_h$, $E_h$) existe un subgrafo G'=($V_g$', $E_g$') tal que G' es isomorfo con H. Es decir, existe una biyección _f_: $V_h$ -> $V_g$' que preserva las adyacencias.
-
-Se debe tener en cuenta que la definición se aplica tanto para grafos dirigidos como para no dirigidos y si existen etiquetas en los vertices o aristas, estas deben preservarse.
-
-#### Demostración de np-completitud:
-
-(SIP $\in$ NP) -> Dada una biyección _f_: $V_h$ -> $V_g$', se comprueban las aristas en O($n^2$).
-
-Por cada arista verificar si:
-
-- {u, v} $\in E_g$
-- {f(u), f(v)} $\in E_h$
-
-Reducción de la entrada del problema a k-clique
-
-El problema de k-clique recibe como entrada un grafo _G_ y un entero _k_
-Transformación:
-
-- G = _G_
-- H = $K_k$ (Grafo completo de k vértices)
-
-La transformación es trivial y se realiza en O($k^2$). Si G tiene un k-clique entonces existe un subgrafo isomorfo a H = $K_k$ (el propio clique). Si G contiene un subgrafo isomorfo a H = $K_k$ entonces ese subgrafo es un k-clique de G
+- **Inicialización:** \( O(n + m) \)
+- **Refinamiento:** Cada iteración requiere \( O(n + m) \) y, en el peor caso, se pueden efectuar \( O(n) \) iteraciones, dando un total de \( O(nm) \).
+  - Para grafos densos: \( O(n^3) \)
+  - Para grafos dispersos: \( O(n^2) \)
 
 #### Limitaciones
 
-La solución es demasiado compleja temporalmente, además es demasiado general para nuestro problema innecesariamente.
+- Es sensible a modificaciones en el código: si se agregan o alteran componentes lógicos, el refinamiento puede no progresar (caso de grafos regulares) o requerir backtracking adicional en grafos altamente simétricos.
+- No es concluyente para todos los grafos; algunos grafos no isomorfos podrían pasar la prueba (falsos positivos).
 
-## Propuesta 3
+---
 
-Las estructuras sobre las cuales estamos computando nuestro problema garantizan que el grafo sobre el que estamos trabajando es un árbol. Por este motivo podemos enfocar los algoritmos anteriores a un dominio más restringido
+### Propuesta 2: Isomorfismo de Subgrafos
 
-### Problema de isomorfismo de árboles 
+#### Definición Formal del Problema
 
-Para este enfoque vamos a determinar si un par de árboles G y H son isomorfos
+Dado un par de grafos \( G = (V_g, E_g) \) y \( H = (V_h, E_h) \), el problema es determinar si existe un subgrafo \( G' = (V'\_g, E'\_g) \) de \( G \) isomorfo a \( H \). Esto implica encontrar una biyección \( f: V_h \to V'\_g \) que preserve las adyacencias (y las etiquetas, si existen).
 
-#### Definición del algoritmo
+#### Demostración de NP-Completitud
 
-Para solucionar el problema de isomorfismo de árboles vamos a utilziar el algoritmo de AHU que consiste en etiquetar los vértices de forma progresiva para obtener en cada vértice una descripción uníca para él que contenga la información de sus hijos. De esta forma determinar si dos árboles son isomorfos no sería más que determinar si sus raíces tienen la misma etiqueta.
+1. **SIP es NP:**  
+   Dada una biyección \( f \), se verifica para cada par \( u, v \in V_h \):
 
-#### Pasos del algoritmo
+- Si \( \{u, v\} \in E_h \) entonces \( \{f(u), f(v)\} \in E_g \).
+- Si no, \( \{f(u), f(v)\} \notin E_g \).
 
-Paso 1: Etiquetar de forma preliminar los vértices teniendo en cuenta su tipo
-Paso 2: Para cada vértice se aplica el algoritmo en sus hijos (en caso de no tener conserva su etiqueta preliminar)
-Paso 3: Se ordenan las nuevas etiquetas obtenidas para los hijos y se concatenan para formar la nueva etiqueta del nodo
-Paso 4: Se realiza el mismo procedimiento para el otro árbol
-Paso 5: Se comparan las raíces de ambos árboles
+Esta verificación toma \( O(n^2) \).
 
-#### Complejidad temporal
+2. **Reducción de \( k \)-Clique a SIP:**
 
-**Caso base:**  
-Para \( n = 1 \) (un árbol formado por una hoja), el coste es:
-\[
-T(1) = O(1)
-\]
+- **Entrada:** El grafo \( G \) para \( k \)-Clique.
+- **Objetivo:** Construir un grafo \( H \) que sea \( K_k \) (grafo completo de \( k \) vértices).
+- Si \( G \) contiene un clique de tamaño \( k \), existe un subgrafo isomorfo a \( H \); y viceversa.
 
-**Hipótesis de inducción:**  
-Supongamos que para todo árbol de tamaño \( m < n \) se cumple que:
-\[
-T(m) \leq a \, m \log m
-\]
-para alguna constante \( a > 0 \)
+3. **NP-Completitud de \( k \)-Clique:**
 
-**Paso inductivo:**  
-Consideremos un árbol con \( n \) nodos cuya raíz tiene \( k \) hijos y tamaños de subárboles \( n_1, n_2, \dots, n_k \) con \( \sum_{i=1}^{k} n_i = n - 1 \). Entonces:
-\[
-T(n) = \sum_{i=1}^{k} T(n_i) + c_1 \, k \log k
-\]
-por alguna constante \( c_1 \).
+- Se verifica en \( O(k^2) \) comprobando que todos los pares de vértices en una solución forman un clique.
+- Se puede reducir 3-SAT a \( k \)-Clique mediante la creación de nodos para cada literal y conectándolos condicionalmente, de modo que un clique de tamaño \( k \) corresponde a una solución de 3-SAT.
 
-Aplicando la hipótesis de inducción para cada subárbol:
-\[
-T(n) \leq \sum_{i=1}^{k} a \, n_i \log n_i + c_1 \, k \log k
-\]
+#### Limitaciones
+
+Este enfoque es computacionalmente costoso y puede resultar demasiado general para el problema específico de detección de plagio.
+
+---
+
+### Propuesta 3: Isomorfismo de Árboles
+
+Dado que se asume que el PDG tiene estructura de árbol, se puede aplicar el **Algoritmo de Aho-Hopcroft-Ullman (AHU)** para determinar si dos árboles enraizados son isomorfos.
+
+#### Definición del Algoritmo
+
+1. **Etiquetado Inicial:**  
+   Asignar a cada nodo una etiqueta preliminar basada en su tipo.
+
+2. **Recursión:**  
+   Aplicar recursivamente el proceso a los hijos de cada nodo.
+
+3. **Ordenación y Concatenación:**  
+   Ordenar lexicográficamente las etiquetas de los hijos y concatenarlas junto a la etiqueta del nodo padre para formar una nueva etiqueta.
+
+4. **Comparación Final:**  
+   Comparar las etiquetas resultantes de las raíces de ambos árboles.
+
+#### Análisis de Complejidad Temporal
+
+- La complejidad del algoritmo es \( O(n \log n) \), donde \( n \) es el número de nodos, teniendo en cuenta la ordenación de las etiquetas en cada nodo.
 
 #### Correctitud
 
+- **Teorema:** El algoritmo AHU asigna una etiqueta canónica \( f(T) \) a cada árbol \( T \) de manera que:
+  \[
+  f(T_1) = f(T_2) \iff T_1 \cong T_2.
+  \]
+- La demostración se realiza por inducción en la altura del árbol, verificando el caso base (hojas) y el paso inductivo (ordenación y concatenación de etiquetas de subárboles).
 
 #### Limitaciones
 
+Aunque es eficiente, este enfoque puede tener dificultades en la comparación de árboles grandes o complejos. Además, comparte la limitación de ser sensible a pequeñas modificaciones en el código.
 
-## Notas
+---
 
-En el caso de la propuesta 1 se define la solución general, pero el primer paso no es necesario ya que los vértices están agrupados por la _etiqueta_ que los representa
-En el caso de la propuesta 2 el vértice con la _etiqueta_ **Program** de B debe ser sustituido por un vértice compatible con cualquier otro para su correcto funcionamiento.
+### Propuesta 4: Isomorfismo de Subárboles
+
+Para abordar cambios o adiciones en el código, se extiende el algoritmo AHU para detectar isomorfismos parciales. Se busca determinar si existe un nodo en \( G \) cuya etiqueta describe un subárbol isomorfo a un árbol objetivo \( H \).
+
+---
+
+## Conclusiones
+
+Se han presentado diversos enfoques para la detección de similitudes en código analizando sus Grafos de Dependencia. La estrategia adecuada dependerá del contexto y de las modificaciones aplicadas al código, siendo el isomorfismo de árboles una opción eficiente para estructuras más sencillas, mientras que enfoques más generales (como el de subgrafos) pueden ser necesarios para casos más complejos.

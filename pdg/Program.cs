@@ -117,16 +117,34 @@ public class Program
     {
         // Uso del código
         var code = @"
-public class Example {
-    public void Test() {
-        int a = 5;
-        int b = a + 3;
-        if (b > 0) {
-            a = b * 2;
+    public class Example {
+        public int BinarySearch(int[] arr, int target) {
+        int left = 0;
+        int right = arr.Length - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (arr[mid] == target) {
+            return mid;
+            } else if (arr[mid] < target) {
+            left = mid + 1;
+            } else {
+            right = mid - 1;
+            }
         }
-        Console.WriteLine(a);
-    }
-}";
+        return -1;
+        }
+
+        public static void Main() {
+        int[] numbers = { 1, 3, 5, 7, 9 };
+        int target = 7;
+        int index = BinarySearch(numbers, target);
+        if (index != -1) {
+            System.Console.WriteLine($""Found {target} at index {index}"");
+        } else {
+            System.Console.WriteLine($""{target} not found"");
+        }
+        }
+    }";
         var syntaxTree = CSharpSyntaxTree.ParseText(code);
         var compilation = CSharpCompilation.Create("Temp")
             .AddReferences(
