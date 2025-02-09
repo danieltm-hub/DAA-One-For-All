@@ -8,6 +8,7 @@
 ## Definiciones
 
 Grafo de dependencias (PDG):
+Tipo de un vértice: El tipo asignado por el PDG
 
 ## Antecedentes e ideas generales
 
@@ -21,17 +22,11 @@ El problema de modelación de la estructura sobre la cual estaremos trabajando (
 
 ## Propuesta 1
 
-Para determinar si dos códigos son copias exactas, sujetos a una serie de modificaciones de las antes mencionadas, y dado que conocemos las potencialidades de los PDG, podríamos como primer enfoque determinar si un par de grafos A y B son isomorfos, de esta manera estaríamos encontrando similitudes estructurales.
+Para determinar si dos códigos son copias exactas, sujetos a una serie de modificaciones de las antes mencionadas, y dado que conocemos las potencialidades de los PDG, podríamos como primer enfoque determinar si un par de grafos son isomorfos, de esta manera estaríamos encontrando similitudes estructurales.
 
 ### Problema de isomorfismo de grafos (GI)
 
-Como enfoque para esta propuesta proponemos determinar si los grafos A y B son isomorfos.
-
-#### Definición del problema
-
-Dados un par de grafos G y H determinar si son isomorfos
-
-vértice
+Como enfoque para esta propuesta proponemos determinar si los grafos G y H son isomorfos
 
 #### Definición del algoritmo
 
@@ -51,8 +46,8 @@ Para resolver el problema de isomorfismo de grafos vamos a estar utilizando un a
 Sean n el número de vértices y m el número de aristas
 
 - (Inicialización) Calcular invariantes: O(n+m)
-- (Refinamiento) Generar etiqueta para todos los nodos: O(n+m)
-- (Refinamiento) Número de iteraciones: O(n) en el peor caso (las clases se dividen hasta que cada nodo esté en su propia clase)
+- (Refinamiento) Generar etiqueta para todos los vértices: O(n+m)
+- (Refinamiento) Número de iteraciones: O(n) en el peor caso (las clases se dividen hasta que cada vértice esté en su propia clase)
 - Total: O(n) X O(n+m) = O(2n + nm) = O(nm)
   - Para grafos densos: O($n^3$)
   - Para grafos dispersos: O($n^2$)
@@ -105,6 +100,55 @@ La solución es demasiado compleja temporalmente, además es demasiado general p
 
 ## Propuesta 3
 
+Las estructuras sobre las cuales estamos computando nuestro problema garantizan que el grafo sobre el que estamos trabajando es un árbol. Por este motivo podemos enfocar los algoritmos anteriores a un dominio más restringido
+
+### Problema de isomorfismo de árboles 
+
+Para este enfoque vamos a determinar si un par de árboles G y H son isomorfos
+
+#### Definición del algoritmo
+
+Para solucionar el problema de isomorfismo de árboles vamos a utilziar el algoritmo de AHU que consiste en etiquetar los vértices de forma progresiva para obtener en cada vértice una descripción uníca para él que contenga la información de sus hijos. De esta forma determinar si dos árboles son isomorfos no sería más que determinar si sus raíces tienen la misma etiqueta.
+
+#### Pasos del algoritmo
+
+Paso 1: Etiquetar de forma preliminar los vértices teniendo en cuenta su tipo
+Paso 2: Para cada vértice se aplica el algoritmo en sus hijos (en caso de no tener conserva su etiqueta preliminar)
+Paso 3: Se ordenan las nuevas etiquetas obtenidas para los hijos y se concatenan para formar la nueva etiqueta del nodo
+Paso 4: Se realiza el mismo procedimiento para el otro árbol
+Paso 5: Se comparan las raíces de ambos árboles
+
+#### Complejidad temporal
+
+**Caso base:**  
+Para \( n = 1 \) (un árbol formado por una hoja), el coste es:
+\[
+T(1) = O(1)
+\]
+
+**Hipótesis de inducción:**  
+Supongamos que para todo árbol de tamaño \( m < n \) se cumple que:
+\[
+T(m) \leq a \, m \log m
+\]
+para alguna constante \( a > 0 \)
+
+**Paso inductivo:**  
+Consideremos un árbol con \( n \) nodos cuya raíz tiene \( k \) hijos y tamaños de subárboles \( n_1, n_2, \dots, n_k \) con \( \sum_{i=1}^{k} n_i = n - 1 \). Entonces:
+\[
+T(n) = \sum_{i=1}^{k} T(n_i) + c_1 \, k \log k
+\]
+por alguna constante \( c_1 \).
+
+Aplicando la hipótesis de inducción para cada subárbol:
+\[
+T(n) \leq \sum_{i=1}^{k} a \, n_i \log n_i + c_1 \, k \log k
+\]
+
+#### Correctitud
+
+
+#### Limitaciones
 
 
 ## Notas
