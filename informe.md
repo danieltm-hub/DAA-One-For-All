@@ -11,7 +11,8 @@ Grafo de dependencias (PDG):
 
 ## Antecedentes e ideas generales
 
-En la dección de plagio de código fuente de manera general aparecen 3 enfoques principales en la literatura: detección basada en texto, análisis sintáctico y análisis semántico, donde cada una maneja un nivel de abstracción del código distinta. En este proyecto nos estaremos enfocando en el análisis semántico del código por su capacidad de ser resistente contra algunas de las estrategias de ofuscación más comunes como son:
+En la detección de plagio de código fuente de manera general aparecen 3 enfoques principales en la literatura: detección basada en texto, análisis sintáctico y análisis semántico, donde cada una maneja un nivel de abstracción del código distinta. En este proyecto nos estaremos enfocando en el análisis semántico del código por su capacidad de ser resistente contra algunas de las estrategias de ofuscación más comunes como son:
+
 - Copias exactas
 - Adición y eliminación de comentarios, modificaciones de formato
 - Reordenamiento de bloques de código, cambio en las estructuras de control, modificación en estructuras de datos (ej. cambiar un array por una lista)
@@ -39,8 +40,8 @@ Para resolver el problema de isomorfismo de grafos vamos a estar utilizando un a
 #### Pasos del algoritmo
 
 - Paso 1 (Inicialización): Para cada vértice de G determinar sus invariantes y agrupar los vértices en clases iniciales según sus invariantes
-- Paso 2 (Refinamiento): En cada iteración, refinar las clases existentes usando la información de los vecinos 
-- Paso 3 (Refinamiento): Agrupar vértices con la misma etiqueta en nuavas clases
+- Paso 2 (Refinamiento): En cada iteración, refinar las clases existentes usando la información de los vecinos
+- Paso 3 (Refinamiento): Agrupar vértices con la misma etiqueta en nuevas clases
 - Paso 4 (Refinamiento): Repetir a partir del paso 2 hasta que las clases ya no puedan ser refinadas (estabilización)
 - Paso 5: Aplicar el mismo proceso para H
 - Paso 6: Verificar coincidencia de las clases, en caso positivo, generar posibles biyecciones entre las clases
@@ -48,6 +49,7 @@ Para resolver el problema de isomorfismo de grafos vamos a estar utilizando un a
 #### Complejidad temporal
 
 Sean n el número de vértices y m el número de aristas
+
 - (Inicialización) Calcular invariantes: O(n+m)
 - (Refinamiento) Generar etiqueta para todos los nodos: O(n+m)
 - (Refinamiento) Número de iteraciones: O(n) en el peor caso (las clases se dividen hasta que cada nodo esté en su propia clase)
@@ -74,23 +76,25 @@ Como enfoque para esta propuesta planteamos determinar si existe algún subgrafo
 
 #### Definición formal del problema:
 
-Dado un par de grafos G=($V_g$, $E_g$) y H=($V_h$, $E_h$) existe un subgrafo G'=($V_g$', $E_g$') tal que G' es isomorfo con H. Es decir, existe una biyección *f*: $V_h$ -> $V_g$' que preserva las adyacencias.
+Dado un par de grafos G=($V_g$, $E_g$) y H=($V_h$, $E_h$) existe un subgrafo G'=($V_g$', $E_g$') tal que G' es isomorfo con H. Es decir, existe una biyección _f_: $V_h$ -> $V_g$' que preserva las adyacencias.
 
-Se debe tener en cuenta que la definición se aplica tanto para grafos dirigidos como para no dirigidos y si existen etiquetas en los vertices o aristas, estas deben preservarse. 
+Se debe tener en cuenta que la definición se aplica tanto para grafos dirigidos como para no dirigidos y si existen etiquetas en los vertices o aristas, estas deben preservarse.
 
 #### Demostración de np-completitud:
 
-(SIP $\in$ NP) -> Dada una biyección *f*: $V_h$ -> $V_g$', se comprueban las aristas en O($n^2$).
+(SIP $\in$ NP) -> Dada una biyección _f_: $V_h$ -> $V_g$', se comprueban las aristas en O($n^2$).
 
 Por cada arista verificar si:
-- {u, v} $\in E_g$ 
+
+- {u, v} $\in E_g$
 - {f(u), f(v)} $\in E_h$
 
 Reducción de la entrada del problema a k-clique
 
-El problema de k-clique recibe como entrada un grafo *G* y un entero *k*
+El problema de k-clique recibe como entrada un grafo _G_ y un entero _k_
 Transformación:
-- G = *G*
+
+- G = _G_
 - H = $K_k$ (Grafo completo de k vértices)
 
 La transformación es trivial y se realiza en O($k^2$). Si G tiene un k-clique entonces existe un subgrafo isomorfo a H = $K_k$ (el propio clique). Si G contiene un subgrafo isomorfo a H = $K_k$ entonces ese subgrafo es un k-clique de G
@@ -99,9 +103,11 @@ La transformación es trivial y se realiza en O($k^2$). Si G tiene un k-clique e
 
 La solución es demasiado compleja temporalmente, además es demasiado general para nuestro problema innecesariamente.
 
+## Propuesta 3
+
 
 
 ## Notas
 
-En el caso de la propuesta 1 se define la solución general, pero el primer paso no es necesario ya que los vértices están agrupados por la *etiqueta* que los representa
-En el caso de la propuesta 2 el vértice con la *etiqueta* **Program** de B debe ser sustituido por un vértice compatible con cualquier otro para su correcto funcionamiento.
+En el caso de la propuesta 1 se define la solución general, pero el primer paso no es necesario ya que los vértices están agrupados por la _etiqueta_ que los representa
+En el caso de la propuesta 2 el vértice con la _etiqueta_ **Program** de B debe ser sustituido por un vértice compatible con cualquier otro para su correcto funcionamiento.
