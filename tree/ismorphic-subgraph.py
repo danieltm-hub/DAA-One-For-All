@@ -7,93 +7,90 @@ class TreeNode:
         self.children = children if children is not None else []
 
 
+def check_subtree(t_node, s_node, memo):
+    print(t_node.label, s_node.label)
+    if (id(t_node), id(s_node)) in memo:
+        return memo[(id(t_node), id(s_node))]
+
+    if t_node.label != s_node.label:
+        memo[(id(t_node), id(s_node))] = False
+        return False
+
+    s_children = s_node.children
+    t_children = t_node.children
+
+    if len(s_children) > len(t_children):
+        memo[(id(t_node), id(s_node))] = False
+        return False
+
+    if not s_children:
+        memo[(id(t_node), id(s_node))] = True
+        return True
+    graph = {}
+    s_nodes = list(enumerate(s_children))
+    t_indices = list(range(len(t_children)))
+
+    for i, s_child in s_nodes:
+        graph[i] = []
+        for j in t_indices:
+            t_child = t_children[j]
+            if t_child.label == s_child.label:
+                if check_subtree(t_child, s_child, memo):
+                    graph[i].append(j)
+
+    def hopcroft_karp():
+        pair_u = {u: None for u in graph}
+        pair_v = {v: None for v in t_indices}
+        dist = {}
+
+        def bfs():
+            queue = deque()
+            for u in graph:
+                if pair_u[u] is None:
+                    dist[u] = 0
+                    queue.append(u)
+                else:
+                    dist[u] = float("inf")
+            dist[None] = float("inf")
+            while queue:
+                u = queue.popleft()
+                if u is not None:
+                    for v in graph[u]:
+                        if dist[pair_v[v]] == float("inf"):
+                            dist[pair_v[v]] = dist[u] + 1
+                            queue.append(pair_v[v])
+            return dist[None] != float("inf")
+
+        def dfs(u):
+            if u is not None:
+                for v in graph[u]:
+                    if dist[pair_v[v]] == dist[u] + 1:
+                        if dfs(pair_v[v]):
+                            pair_u[u] = v
+                            pair_v[v] = u
+                            return True
+                dist[u] = float("inf")
+                return False
+            return True
+
+        result = 0
+        while bfs():
+            for u in graph:
+                if pair_u[u] is None:
+                    if dfs(u):
+                        result += 1
+        return result
+
+    max_matching = hopcroft_karp()
+    result = max_matching == len(s_children)
+    memo[(id(t_node), id(s_node))] = result
+    return result
+
+
 def is_subtree_isomorphic(S, T):
     """
     Checks if tree T contains a subgraph that is isomorphic to tree S.
     """
-
-    def check_subtree(t_node, s_node, memo):
-        print(t_node.label, s_node.label)
-        if (id(t_node), id(s_node)) in memo:
-            return memo[(id(t_node), id(s_node))]
-
-        if t_node.label != s_node.label:
-            memo[(id(t_node), id(s_node))] = False
-            return False
-
-        s_children = s_node.children
-        t_children = t_node.children
-
-        if len(s_children) > len(t_children):
-            memo[(id(t_node), id(s_node))] = False
-            return False
-
-        if not s_children:
-            memo[(id(t_node), id(s_node))] = True
-            return True
-
-        # Build bipartite graph
-        graph = {}
-        s_nodes = list(enumerate(s_children))
-        t_indices = list(range(len(t_children)))
-
-        for i, s_child in s_nodes:
-            graph[i] = []
-            for j in t_indices:
-                t_child = t_children[j]
-                if t_child.label == s_child.label:
-                    if check_subtree(t_child, s_child, memo):
-                        graph[i].append(j)
-
-        # Hopcroft-Karp algorithm for bipartite matching
-        def hopcroft_karp():
-            pair_u = {u: None for u in graph}
-            pair_v = {v: None for v in t_indices}
-            dist = {}
-
-            def bfs():
-                queue = deque()
-                for u in graph:
-                    if pair_u[u] is None:
-                        dist[u] = 0
-                        queue.append(u)
-                    else:
-                        dist[u] = float("inf")
-                dist[None] = float("inf")
-                while queue:
-                    u = queue.popleft()
-                    if u is not None:
-                        for v in graph[u]:
-                            if dist[pair_v[v]] == float("inf"):
-                                dist[pair_v[v]] = dist[u] + 1
-                                queue.append(pair_v[v])
-                return dist[None] != float("inf")
-
-            def dfs(u):
-                if u is not None:
-                    for v in graph[u]:
-                        if dist[pair_v[v]] == dist[u] + 1:
-                            if dfs(pair_v[v]):
-                                pair_u[u] = v
-                                pair_v[v] = u
-                                return True
-                    dist[u] = float("inf")
-                    return False
-                return True
-
-            result = 0
-            while bfs():
-                for u in graph:
-                    if pair_u[u] is None:
-                        if dfs(u):
-                            result += 1
-            return result
-
-        max_matching = hopcroft_karp()
-        result = max_matching == len(s_children)
-        memo[(id(t_node), id(s_node))] = result
-        return result
-
     memo = {}
     queue = deque([T])
     while queue:
@@ -129,5 +126,4 @@ if __name__ == "__main__":
         ],
     )
 
-    print(is_subtree_isomorphic(S, T))  # Output: True
-
+    print(is_subtree_isomorphic(S, T))
